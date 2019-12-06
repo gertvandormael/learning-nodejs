@@ -6,19 +6,22 @@ router.post("/users", async (req, res) => {
 	try {
 		const user = new User(req.body)
 		await user.save()
-		res.status(201).send(user)
+		const token = await user.generateAuthToken()
+
+		res.status(201).send({ user, token })
 	} catch (error) {
 		res.status(400).send(error)
 	}
 })
 
 router.post("/users/login", async (req, res) => {
-  try {
-    const user = await User.findByCredentials(req.body.email, req.body.password)
-    res.send(user)
-  } catch (error) {
-    res.status(400).send()
-  }
+	try {
+		const user = await User.findByCredentials(req.body.email, req.body.password)
+		const token = await user.generateAuthToken()
+		res.send({ user, token })
+	} catch (error) {
+		res.status(400).send()
+	}
 })
 
 router.get("/users", async (req, res) => {
@@ -59,10 +62,10 @@ router.patch("/users/:id", async (req, res) => {
 	try {
 		const user = await User.findById(req.params.id)
 
-		updates.forEach(update => user[update] = req.body[update])
+		updates.forEach(update => (user[update] = req.body[update]))
 		await user.save()
 
-    // the findByIdAndUpdate method bypasses the mongoose middleware methods so we update the user with a foreach loop
+		// the findByIdAndUpdate method bypasses the mongoose middleware methods so we update the user with a foreach loop
 		// const user = await User.findByIdAndUpdate(req.params.id, req.body, {
 		// 	new: true,
 		// 	runValidators: true
