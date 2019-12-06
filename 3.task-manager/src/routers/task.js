@@ -3,8 +3,8 @@ const router = new express.Router()
 const Task = require("../models/task")
 
 router.post("/tasks", async (req, res) => {
-  try {
-    const task = new Task(req.body)
+	try {
+		const task = new Task(req.body)
 		await task.save()
 		res.status(201).send(task)
 	} catch (error) {
@@ -23,8 +23,8 @@ router.get("/tasks", async (req, res) => {
 
 router.get("/tasks/:id", async (req, res) => {
 	try {
-    const task = await Task.findById(req.params.id)
-    
+		const task = await Task.findById(req.params.id)
+
 		if (!task) {
 			return res.status(404).send()
 		}
@@ -47,10 +47,16 @@ router.patch("/tasks/:id", async (req, res) => {
 	}
 
 	try {
-		const task = await Task.findByIdAndUpdate(req.params.id, req.body, {
-			new: true,
-			runValidators: true
-		})
+		const task = await Task.findById(req.params.id)
+
+		updates.forEach(update => (task[update] = req.body[update]))
+		await task.save()
+
+    // the findByIdAndUpdate method bypasses the mongoose middleware methods so we update the user with a foreach loop
+		// const task = await Task.findByIdAndUpdate(req.params.id, req.body, {
+		// 	new: true,
+		// 	runValidators: true
+		// })
 
 		if (!task) {
 			return res.status(404).send()
