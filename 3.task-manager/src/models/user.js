@@ -2,6 +2,7 @@ const mongoose = require("mongoose")
 const validator = require("validator")
 const bcrypt = require("bcryptjs")
 const jwt = require("jsonwebtoken")
+const Task = require("./task")
 
 const userSchema = new mongoose.Schema({
 	name: {
@@ -49,6 +50,12 @@ const userSchema = new mongoose.Schema({
   }]
 })
 
+userSchema.virtual("tasks", {
+	ref: "Task",
+	localField: "_id",
+	foreignField: "owner"
+})
+
 // Express uses JSON.stringify when it sends back data. With the toJSON method we can intercept this data and alter it. 
 // In this case we alter it so that the password and tokens don't get send back to the client 
 userSchema.methods.toJSON = function () {
@@ -89,11 +96,18 @@ userSchema.statics.findByCredentials = async (email, password) => {
 
 // Hash passwords
 userSchema.pre("save", async function (next) {
-  if (this.isModified("password")) {
-    this.password = await bcrypt.hash(this.password, 8)
+	const user = this
+  if (user.isModified("password")) {
+    user.password = await bcrypt.hash(user.password, 8)
   }
   
   next()
+})
+
+userSchema.pre("remove", async function (next) {
+	const user = this
+	await Task.deleteMany({ owner: user._id })
+	next()
 })
 
 const User = mongoose.model("User", userSchema)
