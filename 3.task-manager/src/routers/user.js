@@ -1,7 +1,9 @@
 const express = require("express")
 const router = new express.Router()
+const sharp = require("sharp")
 const User = require("../models/user")
 const auth = require("../middleware/auth")
+const upload = require("../middleware/upload")
 
 router.post("/users", async (req, res) => {
 	try {
@@ -27,7 +29,7 @@ router.post("/users/login", async (req, res) => {
 
 router.post("/users/logout", auth, async (req, res) => {
 	try {
-		req.user.tokens = req. user.tokens.filter((token) => {
+		req.user.tokens = req.user.tokens.filter(token => {
 			return token.token !== req.token
 		})
 		await req.user.save()
@@ -81,6 +83,43 @@ router.delete("/users/me", auth, async (req, res) => {
 		res.send(req.user)
 	} catch (error) {
 		res.status(500).send()
+	}
+})
+
+router.post(
+	"/users/me/avatar",
+	auth,
+	upload.single("avatar"),
+	async (req, res) => {
+		const buffer = await sharp(req.file.buffer).resize({ width: 250, height: 250 }).png().toBuffer()
+		req.user.avatar = buffer
+
+		await req.user.save()
+		res.send()
+	},
+	(error, req, res, next) => {
+		res.status(400).send({ error: error.message })
+	}
+)
+
+router.delete("/users/me/avatar", auth, async (req, res) => {
+	req.user.avatar = undefined
+	await req.user.save()
+	res.send()
+})
+
+router.get("/users/:id/avatar", async (req, res) => {
+	try {
+		const user = await User.findById(req.params.id)
+
+		if (!user || !user.avatar) {
+			throw new Error()
+		}
+
+		res.set("Content-Type", "image/png")
+		res.send(user.avatar)
+	} catch (error) {
+		res.status(404).send()
 	}
 })
 

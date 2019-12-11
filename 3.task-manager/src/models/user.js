@@ -50,7 +50,10 @@ const userSchema = new mongoose.Schema(
 					required: true
 				}
 			}
-		]
+		],
+		avatar: {
+			type: Buffer
+		}
 	},
 	{
 		timestamps: true
@@ -64,13 +67,14 @@ userSchema.virtual("tasks", {
 })
 
 // Express uses JSON.stringify when it sends back data. With the toJSON method we can intercept this data and alter it.
-// In this case we alter it so that the password and tokens don't get send back to the client
+// In this case we alter it so that the password, tokens and avatar binary data don't get send back to the client
 userSchema.methods.toJSON = function() {
 	const user = this
 	const userObject = user.toObject()
 
 	delete userObject.password
 	delete userObject.tokens
+	delete userObject.avatar
 
 	return userObject
 }
