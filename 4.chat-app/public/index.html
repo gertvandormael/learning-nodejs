@@ -4,9 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <script src="/socket.io/socket.io.js" defer></script>
+  <script src="js/chat.js" defer></script>
   <title>Home</title>
 </head>
 <body>
   <h1>Chat app</h1>
+  <form id="message-form">
+    <input type="text" name="message" placeholder="Message">
+    <button>Submit</button>
+  </form>
 </body>
 </html>
